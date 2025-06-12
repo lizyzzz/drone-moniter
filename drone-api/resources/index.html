@@ -596,26 +596,25 @@
                     console.log('收到无人机数据:', data);
                     
                     // 检查数据是否有效
-                    if (!data || typeof data !== 'object' || !data.uavId) {
+                    if (!data || typeof data !== 'object') {
                         console.error('接收到无效的无人机数据');
                         return;
                     }
                     
                     // 注意：后端的经纬度是整数，需要转换为浮点数并除以适当的因子
                     const droneData = {
-                        id: data.uavId,                     // 无人机ID作为唯一标识
+                        id: data.FlightCode,
+                        recordId: data.FlightCode,                  // 无人机ID作为唯一标识
                         longitude: data.longitude / 10000000, // 将整数转换为度数
                         latitude: data.latitude / 10000000,   // 将经度转换为度数
-                        altitude: data.altitude,             // 海拔高度
-                        height: data.height,                 // 对地高度
+                        altitude: data.altitude / 10,         // 海拔高度
+                        height: data.height / 10,             // 对地高度
                         heading: data.course,                // 无人机朝向角度
-                        speed: this.calculateSpeed(data),    // 计算速度
-                        flightTime: data.flightTime,         // 飞行时间
+                        speed: data.VS,                      // 计算速度
                         uavType: data.uavType,               // 无人机类型
-                        recordId: data.recordId,             // 记录ID
+                        orderID: data.orderID,               // 记录ID
                         timeStamp: data.timeStamp,           // 时间戳
-                        totalDistance: 0,                    // 初始化累计飞行距离
-                        battery: 100                         // 初始化模拟电池电量
+                        SOC: data.SOC                        // 初始化模拟电池电量
                     };
                     
                     // 检查是否是新的recordId
@@ -651,43 +650,43 @@
                     }
                     
                     // 计算总飞行距离
-                    if (this.droneCollection.has(data.uavId)) {
-                        const oldData = this.droneCollection.get(data.uavId);
+                    // if (this.droneCollection.has(data.uavId)) {
+                    //     const oldData = this.droneCollection.get(data.uavId);
                         
-                        // 使用Haversine公式计算球面距离
-                        const R = 6371000; // 地球半径，单位米
-                        const oldLat = oldData.latitude;
-                        const oldLon = oldData.longitude;
-                        const newLat = droneData.latitude;
-                        const newLon = droneData.longitude;
+                    //     // 使用Haversine公式计算球面距离
+                    //     const R = 6371000; // 地球半径，单位米
+                    //     const oldLat = oldData.latitude;
+                    //     const oldLon = oldData.longitude;
+                    //     const newLat = droneData.latitude;
+                    //     const newLon = droneData.longitude;
                         
-                        const dLat = (newLat - oldLat) * Math.PI / 180;
-                        const dLon = (newLon - oldLon) * Math.PI / 180;
-                        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                                Math.cos(oldLat * Math.PI / 180) * Math.cos(newLat * Math.PI / 180) * 
-                                Math.sin(dLon/2) * Math.sin(dLon/2);
-                        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-                        const distance = R * c; // 单位：米
+                    //     const dLat = (newLat - oldLat) * Math.PI / 180;
+                    //     const dLon = (newLon - oldLon) * Math.PI / 180;
+                    //     const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    //             Math.cos(oldLat * Math.PI / 180) * Math.cos(newLat * Math.PI / 180) * 
+                    //             Math.sin(dLon/2) * Math.sin(dLon/2);
+                    //     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                    //     const distance = R * c; // 单位：米
                         
-                        // 如果距离合理则累加，否则保持原值
-                        if (distance >= 0 && distance < 100) { // 避免异常数据，限制单次移动距离
-                            droneData.totalDistance = oldData.totalDistance + distance;
-                        } else {
-                            droneData.totalDistance = oldData.totalDistance;
-                        }
+                    //     // 如果距离合理则累加，否则保持原值
+                    //     if (distance >= 0 && distance < 100) { // 避免异常数据，限制单次移动距离
+                    //         droneData.totalDistance = oldData.totalDistance + distance;
+                    //     } else {
+                    //         droneData.totalDistance = oldData.totalDistance;
+                    //     }
                         
-                        // 模拟电池电量 - 根据飞行时间缓慢减少
-                        droneData.battery = Math.max(0, 100 - Math.floor(data.flightTime / 60)); // 每飞行60秒减少1%电量
-                    }
+                    //     // 模拟电池电量 - 根据飞行时间缓慢减少
+                    //     droneData.battery = Math.max(0, 100 - Math.floor(data.flightTime / 60)); // 每飞行60秒减少1%电量
+                    // }
                     
                     // 将无人机数据存入集合
-                    this.droneCollection.set(data.uavId, droneData);
+                    this.droneCollection.set(data.recordId, droneData);
                     
                     // 更新或创建无人机标记
                     this.updateOrCreateDroneMarker(droneData);
                     
                     // 如果是当前选中的无人机，更新信息面板
-                    if (this.selectedDroneId === data.uavId) {
+                    if (this.selectedDroneId === data.recordId) {
                         this.updateInfoPanel(droneData);
                     }
                     
@@ -810,42 +809,42 @@
                 }
                 
                 // 计算无人机速度
-                calculateSpeed(data) {
-                    if (this.droneCollection.has(data.uavId)) {
-                        const oldData = this.droneCollection.get(data.uavId);
+                // calculateSpeed(data) {
+                //     if (this.droneCollection.has(data.uavId)) {
+                //         const oldData = this.droneCollection.get(data.uavId);
                         
-                        // 简单距离计算 - 修正坐标换算
-                        // 经纬度值已经在processDroneData中被除以10000000，这里使用原始值计算
-                        const oldLon = oldData.longitude;
-                        const oldLat = oldData.latitude;
-                        const newLon = data.longitude / 10000000;
-                        const newLat = data.latitude / 10000000;
+                //         // 简单距离计算 - 修正坐标换算
+                //         // 经纬度值已经在processDroneData中被除以10000000，这里使用原始值计算
+                //         const oldLon = oldData.longitude;
+                //         const oldLat = oldData.latitude;
+                //         const newLon = data.longitude / 10000000;
+                //         const newLat = data.latitude / 10000000;
                         
-                        // 使用Haversine公式计算两点之间的球面距离
-                        const R = 6371000; // 地球半径，单位米
-                        const dLat = (newLat - oldLat) * Math.PI / 180;
-                        const dLon = (newLon - oldLon) * Math.PI / 180;
-                        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                                Math.cos(oldLat * Math.PI / 180) * Math.cos(newLat * Math.PI / 180) * 
-                                Math.sin(dLon/2) * Math.sin(dLon/2);
-                        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-                        const distance = R * c; // 单位：米
+                //         // 使用Haversine公式计算两点之间的球面距离
+                //         const R = 6371000; // 地球半径，单位米
+                //         const dLat = (newLat - oldLat) * Math.PI / 180;
+                //         const dLon = (newLon - oldLon) * Math.PI / 180;
+                //         const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                //                 Math.cos(oldLat * Math.PI / 180) * Math.cos(newLat * Math.PI / 180) * 
+                //                 Math.sin(dLon/2) * Math.sin(dLon/2);
+                //         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                //         const distance = R * c; // 单位：米
                         
-                        // 计算时间差（秒）
-                        const currentTime = new Date(data.timeStamp); // RFC3339格式
-                        const lastTime = new Date(oldData.timeStamp);
-                        const timeDiff = (currentTime - lastTime) / 1000;
+                //         // 计算时间差（秒）
+                //         const currentTime = new Date(data.timeStamp); // RFC3339格式
+                //         const lastTime = new Date(oldData.timeStamp);
+                //         const timeDiff = (currentTime - lastTime) / 1000;
                         
-                        // 判断时间差和距离是否有效
-                        if (timeDiff > 0 && distance >= 0) {
-                            // 过滤异常值，如果速度超过100m/s，可能是数据异常
-                            const speed = distance / timeDiff;
-                            return speed > 100 ? 0 : speed; // 单位：m/s
-                        }
-                    }
+                //         // 判断时间差和距离是否有效
+                //         if (timeDiff > 0 && distance >= 0) {
+                //             // 过滤异常值，如果速度超过100m/s，可能是数据异常
+                //             const speed = distance / timeDiff;
+                //             return speed > 100 ? 0 : speed; // 单位：m/s
+                //         }
+                //     }
                     
-                    return 0; // 默认速度
-                }
+                //     return 0; // 默认速度
+                // }
                 
                 updateStatsPanel() {
                     // 更新统计面板 - 显示无人机数量和飞行次数
@@ -874,52 +873,52 @@
                     
                     // 显示更多无人机相关信息
                     // 检查是否已经添加了额外信息项
-                    if (!document.getElementById('uav-type-info')) {
-                        // 添加无人机类型
-                        const typeInfo = document.createElement('p');
-                        typeInfo.innerHTML = `无人机类型: <span id="uav-type-info">-</span>`;
-                        droneInfo.appendChild(typeInfo);
+                    // if (!document.getElementById('uav-type-info')) {
+                    //     // 添加无人机类型
+                    //     const typeInfo = document.createElement('p');
+                    //     typeInfo.innerHTML = `无人机类型: <span id="uav-type-info">-</span>`;
+                    //     droneInfo.appendChild(typeInfo);
                         
-                        // 添加飞行时间
-                        const flightTimeInfo = document.createElement('p');
-                        flightTimeInfo.innerHTML = `飞行时间: <span id="flight-time-info">00:00:00</span>`;
-                        droneInfo.appendChild(flightTimeInfo);
+                    //     // 添加飞行时间
+                    //     const flightTimeInfo = document.createElement('p');
+                    //     flightTimeInfo.innerHTML = `飞行时间: <span id="flight-time-info">00:00:00</span>`;
+                    //     droneInfo.appendChild(flightTimeInfo);
                         
-                        // 添加总飞行距离
-                        const distanceInfo = document.createElement('p');
-                        distanceInfo.innerHTML = `飞行距离: <span id="distance-info">0 m</span>`;
-                        droneInfo.appendChild(distanceInfo);
+                    //     // 添加总飞行距离
+                    //     const distanceInfo = document.createElement('p');
+                    //     distanceInfo.innerHTML = `飞行距离: <span id="distance-info">0 m</span>`;
+                    //     droneInfo.appendChild(distanceInfo);
                         
-                        // 添加电池电量
-                        const batteryInfo = document.createElement('p');
-                        batteryInfo.innerHTML = `电池电量: <span id="battery-info">100%</span>`;
-                        droneInfo.appendChild(batteryInfo);
-                    }
+                    //     // 添加电池电量
+                    //     const batteryInfo = document.createElement('p');
+                    //     batteryInfo.innerHTML = `电池电量: <span id="battery-info">100%</span>`;
+                    //     droneInfo.appendChild(batteryInfo);
+                    // }
                     
                     // 更新额外信息
-                    document.getElementById('uav-type-info').textContent = data.uavType || '-';
+                    // document.getElementById('uav-type-info').textContent = data.uavType || '-';
                     
-                    // 格式化飞行时间
-                    const hours = Math.floor(data.flightTime / 3600);
-                    const minutes = Math.floor((data.flightTime % 3600) / 60);
-                    const seconds = data.flightTime % 60;
-                    const formattedTime = 
-                        String(hours).padStart(2, '0') + ':' + 
-                        String(minutes).padStart(2, '0') + ':' + 
-                        String(seconds).padStart(2, '0');
-                    document.getElementById('flight-time-info').textContent = formattedTime;
+                    // // 格式化飞行时间
+                    // const hours = Math.floor(data.flightTime / 3600);
+                    // const minutes = Math.floor((data.flightTime % 3600) / 60);
+                    // const seconds = data.flightTime % 60;
+                    // const formattedTime = 
+                    //     String(hours).padStart(2, '0') + ':' + 
+                    //     String(minutes).padStart(2, '0') + ':' + 
+                    //     String(seconds).padStart(2, '0');
+                    // document.getElementById('flight-time-info').textContent = formattedTime;
                     
-                    // 格式化飞行距离
-                    let distanceText = '';
-                    if (data.totalDistance >= 1000) {
-                        distanceText = (data.totalDistance / 1000).toFixed(2) + ' km';
-                    } else {
-                        distanceText = Math.round(data.totalDistance) + ' m';
-                    }
-                    document.getElementById('distance-info').textContent = distanceText;
+                    // // 格式化飞行距离
+                    // let distanceText = '';
+                    // if (data.totalDistance >= 1000) {
+                    //     distanceText = (data.totalDistance / 1000).toFixed(2) + ' km';
+                    // } else {
+                    //     distanceText = Math.round(data.totalDistance) + ' m';
+                    // }
+                    // document.getElementById('distance-info').textContent = distanceText;
                     
-                    // 更新电池电量
-                    document.getElementById('battery-info').textContent = data.battery + '%';
+                    // // 更新电池电量
+                    // document.getElementById('battery-info').textContent = data.battery + '%';
                 }
                 
                 // 清理方法，用于关闭WebSocket连接和清理资源

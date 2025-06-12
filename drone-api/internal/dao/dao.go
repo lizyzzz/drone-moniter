@@ -49,16 +49,29 @@ func (d *InfluxDao) BuildPoint(droneStatus *types.DroneStatusReq) (*write.Point,
 
 	point := write.NewPoint("drone_status", // measurement name 相当于表名
 		map[string]string{ // Tags, 相当于建立索引
-			"recordId": droneStatus.RecordId,
-			"uavType":  droneStatus.UavType,
-			"uavId":    droneStatus.UavId},
+			"flightCode": droneStatus.FlightCode,
+			"sn":         droneStatus.Sn},
 		map[string]interface{}{ // Fields, 相当于表的字段
-			"flightTime": droneStatus.FlightTime,
-			"longitude":  droneStatus.Longitude,
-			"latitude":   droneStatus.Latitude,
-			"altitude":   droneStatus.Altitude,
-			"height":     droneStatus.Height,
-			"course":     droneStatus.Course,
+			"orderID":        droneStatus.OrderID,
+			"flightStatus":   droneStatus.FlightStatus,
+			"manufacturerID": droneStatus.ManufacturerID,
+			"uasID":          droneStatus.UasID,
+			"uasModel":       droneStatus.UasModel,
+			"coordinate":     droneStatus.Coordinate,
+			"longitude":      droneStatus.Longitude,
+			"latitude":       droneStatus.Latitude,
+			"heightType":     droneStatus.HeightType,
+			"height":         droneStatus.Height,
+			"altitude":       droneStatus.Altitude,
+			"VS":             droneStatus.VS,
+			"GS":             droneStatus.GS,
+			"course":         droneStatus.Course,
+			"SOC":            droneStatus.SOC,
+			"RM":             droneStatus.RM,
+			"windSpeed":      droneStatus.WindSpeed,
+			"windDirect":     droneStatus.WindDirect,
+			"temperture":     droneStatus.Temperture,
+			"humidity":       droneStatus.Humidity,
 		}, timeStamp)
 
 	return point, nil

@@ -1,14 +1,27 @@
 type DroneStatusReq {
-	RecordId   string  `json:"recordId"`
-	UavType    string  `json:"uavType"`
-	UavId      string  `json:"uavId"`
-	TimeStamp  string  `json:"timeStamp"`
-	FlightTime int     `json:"flightTime"`
-	Longitude  int     `json:"longitude"`
-	Latitude   int     `json:"latitude"`
-	Altitude   float64 `json:"altitude"`
-	Height     float64 `json:"height"`
-	Course     float64 `json:"course"`
+	OrderID        string `json:"orderID"`
+	FlightCode     string `json:"flightCode"`
+	Sn             string `json:"sn"`
+	FlightStatus   string `json:"flightStatus"`
+	ManufacturerID string `json:"manufacturerID"`
+	UasID          string `json:"uasID"`
+	TimeStamp      string `json:"timeStamp"`
+	UasModel       string `json:"uasModel"`
+	Coordinate     int    `json:"coordinate"`
+	Longitude      int64  `json:"longitude"`
+	Latitude       int64  `json:"latitude"`
+	HeightType     int    `json:"heightType"`
+	Height         int    `json:"height"`
+	Altitude       int    `json:"altitude"`
+	VS             int    `json:"VS"`
+	GS             int    `json:"GS"`
+	Course         int    `json:"course"`
+	SOC            int    `json:"SOC"`
+	RM             int    `json:"RM"`
+	WindSpeed      int    `json:"windSpeed,optional"`
+	WindDirect     int    `json:"windDirect,optional"`
+	Temperture     int    `json:"temperture,optional"`
+	Humidity       int    `json:"humidity,optional"`
 }
 
 type DroneStatusResp {

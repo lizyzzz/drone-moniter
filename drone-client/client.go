@@ -12,16 +12,29 @@ import (
 )
 
 type DroneStatusReq struct {
-	RecordId   string  `json:"recordId"`
-	UavType    string  `json:"uavType"`
-	UavId      string  `json:"uavId"`
-	TimeStamp  string  `json:"timeStamp"`
-	FlightTime int     `json:"flightTime"`
-	Longitude  int     `json:"longitude"`
-	Latitude   int     `json:"latitude"`
-	Altitude   float64 `json:"altitude"`
-	Height     float64 `json:"height"`
-	Course     float64 `json:"course"`
+	OrderID        string `json:"orderID"`
+	FlightCode     string `json:"flightCode"`
+	Sn             string `json:"sn"`
+	FlightStatus   string `json:"flightStatus"`
+	ManufacturerID string `json:"manufacturerID"`
+	UasID          string `json:"uasID"`
+	TimeStamp      string `json:"timeStamp"`
+	UasModel       string `json:"uasModel"`
+	Coordinate     int    `json:"coordinate"`
+	Longitude      int64  `json:"longitude"`
+	Latitude       int64  `json:"latitude"`
+	HeightType     int    `json:"heightType"`
+	Height         int    `json:"height"`
+	Altitude       int    `json:"altitude"`
+	VS             int    `json:"VS"`
+	GS             int    `json:"GS"`
+	Course         int    `json:"course"`
+	SOC            int    `json:"SOC"`
+	RM             int    `json:"RM"`
+	WindSpeed      int    `json:"windSpeed"`
+	WindDirect     int    `json:"windDirect"`
+	Temperture     int    `json:"temperture"`
+	Humidity       int    `json:"humidity"`
 }
 
 type DroneStatusResp struct {
@@ -46,9 +59,8 @@ func main() {
 	// 初始经纬度
 	speed := 10.0 // 无人机速度（米/秒）
 	interval := 1 // 每 1 秒计算一次位置
-	uavType := "typeA"
-	uavId := *uavIdPtr
-	flightTime := 0
+	orderID := *uavIdPtr
+	flightCode := *uavIdPtr
 	height := 150.0
 	altitude := 160.0
 
@@ -58,20 +70,32 @@ func main() {
 
 	// 持续发送请求
 	id := 0
-	record := time.Now().Format("20060102150405") + fmt.Sprintf("%03d", id)
 	for range ticker.C {
 		// 构造要发送的数据
 		droneStatusReq := DroneStatusReq{
-			RecordId:   record,
-			UavType:    uavType,
-			UavId:      uavId,
-			TimeStamp:  time.Now().Format("2006-01-02-15-04-05"),
-			FlightTime: flightTime,
-			Longitude:  int(lon * 10000000), // 转换为整数
-			Latitude:   int(lat * 10000000), // 转换为整数
-			Altitude:   altitude,
-			Height:     height,
-			Course:     bearing,
+			OrderID:        orderID,
+			FlightCode:     flightCode,
+			Sn:             flightCode,
+			FlightStatus:   "Inflight",
+			ManufacturerID: "112233",
+			UasID:          "Uas-default",
+			TimeStamp:      time.Now().Format("20060102150405"),
+			UasModel:       "Uas-default",
+			Coordinate:     1,
+			Longitude:      int64(lon * 10000000), // 转换为整数
+			Latitude:       int64(lat * 10000000), // 转换为整数
+			HeightType:     1,
+			Height:         int(height * 10),
+			Altitude:       int(altitude * 10),
+			VS:             int(speed * 10),
+			GS:             0,
+			Course:         int(bearing * 10),
+			SOC:            100,
+			RM:             10,
+			WindSpeed:      10,
+			WindDirect:     90,
+			Temperture:     30,
+			Humidity:       50,
 		}
 
 		jsonData, err := json.Marshal(droneStatusReq)
@@ -93,9 +117,7 @@ func main() {
 		resp.Body.Close()
 
 		id++
-		flightTime += interval
 		if id%30 == 0 {
-			record = time.Now().Format("20060102150405") + fmt.Sprintf("%03d", id)
 			bearing += 180.0
 			if bearing >= 360.0 {
 				bearing -= 360.0

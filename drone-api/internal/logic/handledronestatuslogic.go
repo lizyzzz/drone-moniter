@@ -26,7 +26,7 @@ func NewHandleDroneStatusLogic(ctx context.Context, svcCtx *svc.ServiceContext) 
 }
 
 func (l *HandleDroneStatusLogic) HandleDroneStatus(req *types.DroneStatusReq) (resp *types.DroneStatusResp, err error) {
-	t, err := time.Parse("2006-01-02-15-04-05", req.TimeStamp)
+	t, err := time.Parse("20060102150405", req.TimeStamp)
 	if err != nil {
 		return nil, err
 	}
