@@ -39,13 +39,14 @@ func (d *InfluxDao) AddPoint(point *write.Point) error {
 
 func (d *InfluxDao) BuildPoint(droneStatus *types.DroneStatusReq) (*write.Point, error) {
 
-	// 注意时区, 这个时区是UTC+8, 查询时需要转换成UTC
+	// 注意时区, 这个时区是UTC+8, 需要转换成UTC0
 	timeStamp, err := time.Parse(time.RFC3339, droneStatus.TimeStamp)
 
 	// fmt.Println("timeStamp: ", timeStamp)
 	if err != nil {
 		return nil, err
 	}
+	utcTime := timeStamp.Add(-8 * time.Hour)
 
 	point := write.NewPoint("drone_status", // measurement name 相当于表名
 		map[string]string{ // Tags, 相当于建立索引
@@ -72,7 +73,7 @@ func (d *InfluxDao) BuildPoint(droneStatus *types.DroneStatusReq) (*write.Point,
 			"windDirect":     droneStatus.WindDirect,
 			"temperture":     droneStatus.Temperture,
 			"humidity":       droneStatus.Humidity,
-		}, timeStamp)
+		}, utcTime)
 
 	return point, nil
 }

@@ -42,3 +42,10 @@ sudo cp ./drone-api/resources/index.html /var/www/html/
 ```
 如需使用公网 ip 转发，请单独配置 frpc 进程
 ```
+
+* 查询 influxdb 数据库示例
+```Shell
+# 查询 表 drone_status 过去1h到现在的 longitude 字段和时间
+# 注意返回的是 UTC0 时间
+influx query --org sysu --token tK0BKAx693FyWtedXb7LCH6GSQXQs6cof-niW3lDoABVcir7BRVHSwXUDFEjuqlZpVS8PKINXdDscLhiyfg== 'from(bucket:"drone_data") |> range(start:-1h,stop:now()) |> filter(fn: (r) => r._measurement == "drone_status") |> filter(fn: (r) => r._field == "longitude") |> keep(columns: ["_time", "_value", "longitude"])'
+```

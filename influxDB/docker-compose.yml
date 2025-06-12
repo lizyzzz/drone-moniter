@@ -9,9 +9,9 @@ services:
       - my-network        # 加入自定义网络
     volumes:
       - ./influxdb2:/var/lib/influxdb2  # 数据持久化目录
-      - /etc/localtime:/etc/localtime:ro    # 同步宿主机时区
       - ./influxdb.conf:/etc/influxdb2/influxdb.conf
     environment:
+      TZ: UTC
       DOCKER_INFLUXDB_INIT_MODE: setup
       DOCKER_INFLUXDB_INIT_USERNAME: admin
       DOCKER_INFLUXDB_INIT_PASSWORD: 12345678
